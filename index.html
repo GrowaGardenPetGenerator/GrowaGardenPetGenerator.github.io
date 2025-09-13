@@ -1,85 +1,188 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Grow a Garden Pet Generator</title>
-  <style>
-    :root{
-      --bg:#0f1724;
-      --card:#0b1220;
-      --accent:#7c3aed;
-      --muted:#9ca3af;
-      --glow:#9333ea;
-    }
-    html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial}
-    body{display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#071029 0%,#051020 100%);color:#e6eef8}
-    .card{width:100%;max-width:900px;background:var(--card);padding:28px;border-radius:14px;box-shadow:0 10px 30px rgba(2,6,23,0.6);}
-    h1{margin:0 0 8px;font-size:24px;text-align:center}
-    p.lead{margin:0 0 18px;color:var(--muted);font-size:14px;text-align:center}
-    .banner{width:100%;border-radius:12px;overflow:hidden;margin-bottom:20px}
-    .banner img{width:100%;display:block;border-radius:12px}
-    .pets{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px;margin-top:20px;justify-items:center}
-    .pet{position:relative;cursor:pointer;border-radius:12px;overflow:hidden;box-shadow:0 0 8px rgba(0,0,0,0.6);transition:transform .2s, box-shadow .2s; background:#111;max-width:160px;width:100%}
-    .pet img{width:100%;height:120px;object-fit:cover;display:block}
-    .pet span{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.6);padding:6px;font-size:13px;text-align:center}
-    .pet:hover{transform:scale(1.08);box-shadow:0 0 16px var(--glow)}
-    .pet.selected{box-shadow:0 0 20px var(--glow),0 0 40px var(--glow);}
-    .pet.selected::after{content:'✔';position:absolute;top:6px;right:6px;background:var(--glow);color:white;font-size:16px;border-radius:50%;padding:4px 6px;box-shadow:0 0 8px var(--glow)}
-    .actions{text-align:center;margin-top:24px}
-    button{padding:12px 20px;border-radius:10px;border:0;background:linear-gradient(90deg,var(--accent),#4f46e5);color:white;font-weight:600;cursor:pointer;font-size:15px;box-shadow:0 4px 10px rgba(0,0,0,0.4);transition:transform .2s, box-shadow .2s}
-    button:hover{transform:scale(1.05);box-shadow:0 0 14px var(--glow)}
-    @media(max-width:600px){
-      .pets{grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px}
-      .pet img{height:100px}
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Grow a Garden Pet Generator</title>
+<style>
+:root{--bg:#0f1724;--card:#0b1220;--accent:#7c3aed;--muted:#9ca3af;--glow:#9333ea}
+html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;background:linear-gradient(180deg,#071029 0%,#051020 100%);color:#e6eef8;display:flex;justify-content:center;align-items:center}
+.card{width:100%;max-width:900px;background:var(--card);padding:28px;border-radius:14px;box-shadow:0 10px 30px rgba(2,6,23,0.6)}
+h1,h2{margin:0;text-align:center}
+h2.title{margin-bottom:20px;color:#fff;font-size:28px}
+p.lead{margin:0 0 18px;color:var(--muted);font-size:14px;text-align:center}
+.banner{width:100%;border-radius:12px;overflow:hidden;margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:12px}
+.banner img{max-height:80px;object-fit:contain}
+.icon{height:60px;width:auto}
+.inputs{display:flex;justify-content:center;gap:12px;margin-top:16px;flex-direction:column;align-items:center}
+.inputs input, .inputs select{padding:8px;border-radius:8px;border:none;background:#1b2430;color:#fff;width:120px;text-align:center;font-size:14px}
+.glow-label {color: #fff;font-weight: bold;font-size: 14px;text-shadow:0 0 5px #7c3aed,0 0 10px #7c3aed,0 0 20px #9333ea;margin-bottom:4px;text-align:center}
+.actions{text-align:center;margin-top:24px}
+button{padding:12px 20px;border-radius:10px;border:0;background:linear-gradient(90deg,var(--accent),#4f46e5);color:white;font-weight:600;cursor:pointer;font-size:15px;box-shadow:0 4px 10px rgba(0,0,0,0.4);transition:transform .2s, box-shadow .2s;margin:4px}
+button:disabled{opacity:0.5;cursor:not-allowed}
+button:hover:not(:disabled){transform:scale(1.05);box-shadow:0 0 14px var(--glow)}
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:60;display:none}
+.modal{background:var(--card);padding:20px;border-radius:12px;max-width:420px;width:92%;box-shadow:0 10px 40px rgba(2,6,23,0.7);color:#e6eef8;text-align:center;position:relative}
+.progress{height:10px;background:rgba(255,255,255,0.06);border-radius:999px;overflow:hidden;margin-top:10px}
+.progress > div{height:100%;width:0%;background:linear-gradient(90deg,var(--glow),#7c3aed);transition:width .2s}
+.proc-steps{font-size:13px;margin-top:8px;color:var(--muted)}
+.confetti {position:absolute;width:8px;height:8px;background:var(--accent);pointer-events:none;animation:fall 1s linear forwards;}
+@keyframes fall {0%{transform:translateY(0) rotate(0deg)}100%{transform:translateY(200px) rotate(360deg);opacity:0}}
+</style>
 </head>
 <body>
-  <div class="card">
-    <div class="banner">
-      <!-- Local path banner image -->
-      <img src="images/grow-a-garden-banner.jpg" alt="Grow a Garden" />
-    </div>
-    <h1>Pick Your Pet</h1>
-    <p class="lead">Choose a pet you’d like to generate, then tap <strong>Generate</strong> to continue.</p>
+<div class="card">
+<h2 class="title">GROW A GARDEN PET GENERATOR</h2>
+<div class="banner">
+<img class="icon" src="images/roblox-icon.png" alt="Roblox" onerror="this.src='https://via.placeholder.com/60?text=R'"/>
+<img id="bannerImg" src="images/grow-a-garden-banner.jpg" alt="Grow a Garden" onerror="this.src='https://via.placeholder.com/200x60?text=Grow+a+Garden'"/>
+</div>
+<h1>Pick a Pet</h1>
+<p class="lead"><strong id="statusText">Select a pet, fill details, then Generate.</strong></p>
 
-    <div class="pets" id="petGrid">
-      <div class="pet" data-name="Kitsune"><img src="Internal storage/Pictures/Gallery/owner/bw/Kitsune-1.webp
-" alt="Kitsune"><span>Kitsune</span></div>
-      <div class="pet" data-name="Raccoon"><img src="images/raccoon.webp" alt="Raccoon"><span>Raccoon</span></div>
-      <div class="pet" data-name="Dragonfly"><img src="images/dragonfly.webp" alt="Dragonfly"><span>Dragonfly</span></div>
-      <div class="pet" data-name="Mimic Octopus"><img src="images/mimic.webp" alt="Mimic Octopus"><span>Mimic Octopus</span></div>
-      <div class="pet" data-name="Butterfly"><img src="images/butterfly.webp" alt="Butterfly"><span>Butterfly</span></div>
-      <div class="pet" data-name="Disco Bee"><img src="images/disco-bee.webp" alt="Disco Bee"><span>Disco Bee</span></div>
+<div class="inputs">
+  <!-- Top row: PET | MUTATION | KG -->
+  <div style="display:flex;gap:12px;justify-content:center;width:100%;flex-wrap:wrap">
+    <div style="display:flex;flex-direction:column;align-items:center">
+      <label class="glow-label">Pet</label>
+      <select id="petSelect">
+        <option disabled selected>Select Pet</option>
+      </select>
     </div>
 
-    <div class="actions">
-      <button id="generateBtn">Generate</button>
+    <div style="display:flex;flex-direction:column;align-items:center">
+      <label class="glow-label">Mutation</label>
+      <select id="mutationInput">
+        <option>Shiny</option><option>Inverted</option><option>Frozen</option><option>Windy</option>
+        <option>Golden</option><option>Mega</option><option>Tiny</option><option>IronSkin</option>
+        <option>Radiant</option><option>Rainbow</option><option>Shocked</option><option>Ascended</option>
+        <option>Tranquil</option><option>Corrupted</option><option>Fried</option><option>Aromatic</option>
+        <option>GiantBean</option><option>Silver</option><option>Glimmering</option><option>Luminous</option>
+      </select>
+    </div>
+
+    <div style="display:flex;flex-direction:column;align-items:center">
+      <label class="glow-label">KG</label>
+      <input type="number" id="kgInput" min="0" max="110" placeholder="KG">
     </div>
   </div>
 
-  <script>
-    const petGrid = document.getElementById('petGrid');
-    let selectedPet = null;
+  <!-- Age input above preview -->
+  <div style="margin-top:12px;display:flex;flex-direction:column;align-items:center">
+    <label class="glow-label">Age</label>
+    <input type="number" id="ageInput" min="1" max="100" placeholder="Age">
+  </div>
 
-    function attachClick(pet){
-      pet.addEventListener('click', ()=>{
-        document.querySelectorAll('.pet').forEach(p=>p.classList.remove('selected'));
-        pet.classList.add('selected');
-        selectedPet = pet.dataset.name;
-      });
+  <!-- Pet preview below age -->
+  <div style="margin-top:12px;">
+    <img id="petPreview" src="" alt="Pet Preview" style="width:120px;height:120px;object-fit:cover;border-radius:8px;border:2px solid var(--glow);display:none;">
+  </div>
+</div>
+
+<div class="actions">
+    <button id="generateBtn" disabled>Generate</button>
+</div>
+
+<!-- PROCESSING MODAL -->
+<div id="processingModal" class="modal-backdrop">
+  <div class="modal">
+    <h2>Generating your pet...</h2>
+    <div class="progress"><div id="progressBar"></div></div>
+    <div class="proc-steps" id="procSteps">Starting...</div>
+  </div>
+</div>
+
+<script>
+// PET DATA
+const pets=[
+{name:"Kitsune",desc:"A mystical fox spirit known for wisdom and magic.",img:"Internal storage/Pictures/Gallery/owner/bw/Kitsune-1.webp"},
+{name:"Raccoon",desc:"A clever scavenger with nimble paws.",img:"images/raccoon.webp"},
+{name:"Dragonfly",desc:"A swift flyer symbolizing agility.",img:"images/dragonfly.webp"},
+{name:"Mimic Octopus",desc:"A master of disguise from the deep sea.",img:"images/mimic.webp"},
+{name:"Butterfly",desc:"A gentle creature of beauty and change.",img:"images/butterfly.webp"},
+{name:"Disco Bee",desc:"A buzzing dancer with sparkling wings.",img:"images/disco-bee.webp"}
+];
+
+// POPULATE PET SELECT
+const petSelect=document.getElementById('petSelect');
+const petPreview=document.getElementById('petPreview');
+pets.forEach(p=>{
+  const opt=document.createElement('option');
+  opt.value=p.name;
+  opt.textContent=p.name;
+  petSelect.appendChild(opt);
+});
+
+const mutationInput=document.getElementById('mutationInput');
+const ageInput=document.getElementById('ageInput');
+const kgInput=document.getElementById('kgInput');
+const generateBtn=document.getElementById('generateBtn');
+const processingModal=document.getElementById('processingModal');
+const progressBar=document.getElementById('progressBar');
+const procSteps=document.getElementById('procSteps');
+
+function updateGenerateStatus(){
+  generateBtn.disabled = !(petSelect.value && mutationInput.value && ageInput.value && kgInput.value);
+}
+
+// PET SELECTION + PREVIEW + CONFETTI
+petSelect.addEventListener('change',()=>{
+  const petData=pets.find(p=>p.name===petSelect.value);
+  if(petData){
+    petPreview.src=petData.img;
+    petPreview.style.display='block';
+    spawnConfetti(petPreview);
+  } else petPreview.style.display='none';
+  updateGenerateStatus();
+});
+
+mutationInput.addEventListener('input',updateGenerateStatus);
+ageInput.addEventListener('input',updateGenerateStatus);
+kgInput.addEventListener('input',updateGenerateStatus);
+
+// CONFETTI FUNCTION
+function spawnConfetti(element){
+  const rect=element.getBoundingClientRect();
+  for(let i=0;i<20;i++){
+    const c=document.createElement('div');
+    c.className='confetti';
+    document.body.appendChild(c);
+    c.style.left=(rect.left + rect.width/2 + (Math.random()*60-30))+'px';
+    c.style.top=(rect.top + rect.height/2 + (Math.random()*60-30))+'px';
+    c.style.background=`hsl(${Math.random()*360},100%,70%)`;
+    c.style.width=c.style.height=Math.floor(Math.random()*6+6)+'px';
+    setTimeout(()=>{document.body.removeChild(c)},1200);
+  }
+}
+
+// GENERATE BUTTON
+generateBtn.addEventListener('click',()=>{
+  const selectedPet=petSelect.value;
+  const mutation=mutationInput.value;
+  const age=ageInput.value;
+  const kg=kgInput.value;
+  if(!selectedPet || !mutation || !age || !kg){alert("Please fill all fields!"); return;}
+  processingModal.style.display='flex';
+  let pct=0;
+  const steps=['Preparing your pet...','Loading assets...','Finalizing...'];
+  let i=0;
+  const interval=setInterval(()=>{
+    pct+=Math.floor(Math.random()*15)+10;
+    if(pct>100) pct=100;
+    progressBar.style.width=pct+'%';
+    procSteps.textContent=steps[Math.min(i,steps.length-1)]+' ('+pct+'%)';
+    i++;
+    if(pct>=100){
+      clearInterval(interval);
+      procSteps.textContent='Done!';
+      setTimeout(()=>{
+        processingModal.style.display='none';
+        alert(`Generated ${selectedPet} | Mutation: ${mutation} | Age: ${age} | KG: ${kg}`);
+        window.open('https://www.robiox.com.tg/games/126884695634066/Grow-a-Garden?privateServerLinkCode=668138461375721358682486858889','_blank');
+      },800);
     }
-
-    document.querySelectorAll('.pet').forEach(attachClick);
-
-    document.getElementById('generateBtn').addEventListener('click', ()=>{
-      if(!selectedPet){
-        alert('Please choose a pet first!');
-        return;
-      }
-      window.open('https://www.robiox.com.tg/games/126884695634066/Grow-a-Garden?privateServerLinkCode=668138461375721358682486858889','_blank');
-    });
-  </script>
+  },600);
+});
+</script>
 </body>
 </html>
