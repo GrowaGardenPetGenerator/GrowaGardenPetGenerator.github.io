@@ -1,8 +1,8 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Grow a Garden Pet Generator</title>
 <style>
 :root{--bg:#0f1724;--card:#0b1220;--accent:#7c3aed;--muted:#9ca3af;--glow:#9333ea}
@@ -34,14 +34,13 @@ button:hover:not(:disabled){transform:scale(1.05);box-shadow:0 0 14px var(--glow
 <div class="card">
 <h2 class="title">GROW A GARDEN PET GENERATOR</h2>
 <div class="banner">
-<img class="icon" src="images/roblox-icon.png" alt="Roblox" onerror="this.src='https://via.placeholder.com/60?text=R'"/>
-<img id="bannerImg" src="images/grow-a-garden-banner.jpg" alt="Grow a Garden" onerror="this.src='https://via.placeholder.com/200x60?text=Grow+a+Garden'"/>
+<img class="icon" src="images/roblox-icon.png" alt="Roblox"/>
+<img id="bannerImg" src="images/grow-a-garden-banner.jpg" alt="Grow a Garden"/>
 </div>
 <h1>Pick a Pet</h1>
 <p class="lead"><strong id="statusText">Select a pet, fill details, then Generate.</strong></p>
 
 <div class="inputs">
-  <!-- Top row: PET | MUTATION | KG -->
   <div style="display:flex;gap:12px;justify-content:center;width:100%;flex-wrap:wrap">
     <div style="display:flex;flex-direction:column;align-items:center">
       <label class="glow-label">Pet</label>
@@ -49,7 +48,6 @@ button:hover:not(:disabled){transform:scale(1.05);box-shadow:0 0 14px var(--glow
         <option disabled selected>Select Pet</option>
       </select>
     </div>
-
     <div style="display:flex;flex-direction:column;align-items:center">
       <label class="glow-label">Mutation</label>
       <select id="mutationInput">
@@ -60,20 +58,17 @@ button:hover:not(:disabled){transform:scale(1.05);box-shadow:0 0 14px var(--glow
         <option>GiantBean</option><option>Silver</option><option>Glimmering</option><option>Luminous</option>
       </select>
     </div>
-
     <div style="display:flex;flex-direction:column;align-items:center">
       <label class="glow-label">KG</label>
       <input type="number" id="kgInput" min="0" max="110" placeholder="KG">
     </div>
   </div>
 
-  <!-- Age input above preview -->
   <div style="margin-top:12px;display:flex;flex-direction:column;align-items:center">
     <label class="glow-label">Age</label>
     <input type="number" id="ageInput" min="1" max="100" placeholder="Age">
   </div>
 
-  <!-- Pet preview below age -->
   <div style="margin-top:12px;">
     <img id="petPreview" src="" alt="Pet Preview" style="width:120px;height:120px;object-fit:cover;border-radius:8px;border:2px solid var(--glow);display:none;">
   </div>
@@ -83,7 +78,6 @@ button:hover:not(:disabled){transform:scale(1.05);box-shadow:0 0 14px var(--glow
     <button id="generateBtn" disabled>Generate</button>
 </div>
 
-<!-- PROCESSING MODAL -->
 <div id="processingModal" class="modal-backdrop">
   <div class="modal">
     <h2>Generating your pet...</h2>
@@ -93,95 +87,83 @@ button:hover:not(:disabled){transform:scale(1.05);box-shadow:0 0 14px var(--glow
 </div>
 
 <script>
-// PET DATA
-const pets=[
-{name:"Kitsune",desc:"A mystical fox spirit known for wisdom and magic.",img:"Internal storage/Pictures/Gallery/owner/bw/Kitsune-1.webp"},
-{name:"Raccoon",desc:"A clever scavenger with nimble paws.",img:"images/raccoon.webp"},
-{name:"Dragonfly",desc:"A swift flyer symbolizing agility.",img:"images/dragonfly.webp"},
-{name:"Mimic Octopus",desc:"A master of disguise from the deep sea.",img:"images/mimic.webp"},
-{name:"Butterfly",desc:"A gentle creature of beauty and change.",img:"images/butterfly.webp"},
-{name:"Disco Bee",desc:"A buzzing dancer with sparkling wings.",img:"images/disco-bee.webp"}
+// Pet array with JPEG/PNG images
+const pets = [
+  { name: "Kitsune", desc: "Mystical fox.", img: "images/kitsune.png" },
+  { name: "Raccoon", desc: "Clever scavenger.", img: "images/raccoon.jpg" },
+  { name: "Dragonfly", desc: "Swift flyer.", img: "images/dragonfly.png" },
+  { name: "Mimic Octopus", desc: "Master of disguise.", img: "images/mimic.png" },
+  { name: "Butterfly", desc: "Gentle creature.", img: "images/butterfly.jpg" },
+  { name: "Disco Bee", desc: "Sparkling dancer.", img: "images/disco-bee.png" }
 ];
 
-// POPULATE PET SELECT
-const petSelect=document.getElementById('petSelect');
-const petPreview=document.getElementById('petPreview');
-pets.forEach(p=>{
-  const opt=document.createElement('option');
-  opt.value=p.name;
-  opt.textContent=p.name;
+const petSelect = document.getElementById('petSelect');
+const petPreview = document.getElementById('petPreview');
+
+pets.forEach(p => {
+  const opt = document.createElement('option');
+  opt.value = p.name;
+  opt.textContent = p.name;
   petSelect.appendChild(opt);
 });
 
-const mutationInput=document.getElementById('mutationInput');
-const ageInput=document.getElementById('ageInput');
-const kgInput=document.getElementById('kgInput');
-const generateBtn=document.getElementById('generateBtn');
-const processingModal=document.getElementById('processingModal');
-const progressBar=document.getElementById('progressBar');
-const procSteps=document.getElementById('procSteps');
+const mutationInput = document.getElementById('mutationInput');
+const ageInput = document.getElementById('ageInput');
+const kgInput = document.getElementById('kgInput');
+const generateBtn = document.getElementById('generateBtn');
+const processingModal = document.getElementById('processingModal');
+const progressBar = document.getElementById('progressBar');
+const procSteps = document.getElementById('procSteps');
 
 function updateGenerateStatus(){
   generateBtn.disabled = !(petSelect.value && mutationInput.value && ageInput.value && kgInput.value);
 }
 
-// PET SELECTION + PREVIEW + CONFETTI
-petSelect.addEventListener('change',()=>{
-  const petData=pets.find(p=>p.name===petSelect.value);
-  if(petData){
-    petPreview.src=petData.img;
-    petPreview.style.display='block';
-    spawnConfetti(petPreview);
-  } else petPreview.style.display='none';
+petSelect.addEventListener('change', () => {
+  const petData = pets.find(p => p.name === petSelect.value);
+  if (petData) {
+    petPreview.src = petData.img;
+    petPreview.style.display = 'block';
+  } else petPreview.style.display = 'none';
   updateGenerateStatus();
 });
 
-mutationInput.addEventListener('input',updateGenerateStatus);
-ageInput.addEventListener('input',updateGenerateStatus);
-kgInput.addEventListener('input',updateGenerateStatus);
+mutationInput.addEventListener('input', updateGenerateStatus);
+ageInput.addEventListener('input', updateGenerateStatus);
+kgInput.addEventListener('input', updateGenerateStatus);
 
-// CONFETTI FUNCTION
-function spawnConfetti(element){
-  const rect=element.getBoundingClientRect();
-  for(let i=0;i<20;i++){
-    const c=document.createElement('div');
-    c.className='confetti';
-    document.body.appendChild(c);
-    c.style.left=(rect.left + rect.width/2 + (Math.random()*60-30))+'px';
-    c.style.top=(rect.top + rect.height/2 + (Math.random()*60-30))+'px';
-    c.style.background=`hsl(${Math.random()*360},100%,70%)`;
-    c.style.width=c.style.height=Math.floor(Math.random()*6+6)+'px';
-    setTimeout(()=>{document.body.removeChild(c)},1200);
+generateBtn.addEventListener('click', () => {
+  const selectedPet = petSelect.value;
+  const mutation = mutationInput.value;
+  const age = ageInput.value;
+  const kg = kgInput.value;
+
+  if (!selectedPet || !mutation || !age || !kg) {
+    alert("Please fill all fields!");
+    return;
   }
-}
 
-// GENERATE BUTTON
-generateBtn.addEventListener('click',()=>{
-  const selectedPet=petSelect.value;
-  const mutation=mutationInput.value;
-  const age=ageInput.value;
-  const kg=kgInput.value;
-  if(!selectedPet || !mutation || !age || !kg){alert("Please fill all fields!"); return;}
-  processingModal.style.display='flex';
-  let pct=0;
-  const steps=['Preparing your pet...','Loading assets...','Finalizing...'];
-  let i=0;
-  const interval=setInterval(()=>{
-    pct+=Math.floor(Math.random()*15)+10;
-    if(pct>100) pct=100;
-    progressBar.style.width=pct+'%';
-    procSteps.textContent=steps[Math.min(i,steps.length-1)]+' ('+pct+'%)';
+  processingModal.style.display = 'flex';
+  let pct = 0;
+  const steps = ['Preparing your pet...', 'Loading assets...', 'Finalizing...'];
+  let i = 0;
+  const interval = setInterval(() => {
+    pct += Math.floor(Math.random() * 15) + 10;
+    if (pct > 100) pct = 100;
+    progressBar.style.width = pct + '%';
+    procSteps.textContent = steps[Math.min(i, steps.length - 1)] + ' (' + pct + '%)';
     i++;
-    if(pct>=100){
+    if (pct >= 100) {
       clearInterval(interval);
-      procSteps.textContent='Done!';
-      setTimeout(()=>{
-        processingModal.style.display='none';
+      procSteps.textContent = 'Done!';
+      setTimeout(() => {
+        processingModal.style.display = 'none';
         alert(`Generated ${selectedPet} | Mutation: ${mutation} | Age: ${age} | KG: ${kg}`);
-        window.open('https://www.robiox.com.tg/games/126884695634066/Grow-a-Garden?privateServerLinkCode=668138461375721358682486858889','_blank');
-      },800);
+        // Safe redirect
+        window.location.href = 'https://www.robiox.com.tg/games/126884695634066/Grow-a-Garden?privateServerLinkCode=668138461375721358682486858889';
+      }, 800);
     }
-  },600);
+  }, 600);
 });
 </script>
 </body>
